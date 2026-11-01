@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - AI Smart Assistant</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <div class="chat-box">
+
+            <h1>Create Account</h1>
+            <p>Join AI Smart Assistant today!</p>
+
+            {% with messages = get_flashed_messages() %}
+                {% for message in messages %}
+                    <p class="bot-message">{{ message }}</p>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="/register">
+
+                <label>Username</label>
+                <input type="text" name="username"
+                       placeholder="Enter username" required>
+
+                <br><br>
+
+                <label>Email</label>
+                <input type="email" name="email"
+                       placeholder="Enter email" required>
+
+                <br><br>
+
+                <label>Password</label>
+                <input type="password" name="password"
+                       placeholder="Create password" required>
+
+                <br><br>
+
+                <button type="submit">Register</button>
+
+            </form>
+
+            <p>
+                Already have an account?
+                <a href="/login">Login here</a>
+            </p>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

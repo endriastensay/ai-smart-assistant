@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <a href="/logout" style="color:white;">
+    Logout
+</a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Smart Assistant</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <header>
+        <h1>AI Smart Assistant</h1>
+        <p>Your intelligent digital assistant</p>
+
+        <button id="themeButton" onclick="toggleTheme()">
+            🌙 Dark Mode
+        </button>
+    </header>
+
+    <main class="container">
+
+        <h2>Welcome!</h2>
+
+        <p>Ask questions, explore ideas and learn with AI.</p>
+
+        <div class="chat-box">
+
+            <div id="messages">
+
+                <p class="bot-message">
+                    Hello! Welcome to AI Smart Assistant.
+                </p>
+
+                {% for msg in messages %}
+
+                    <div class="conversation">
+
+                        <p class="user-message">
+                            <strong>You:</strong>
+                            {{ msg.user_message }}
+                        </p>
+
+                        <p class="bot-message">
+                            <strong>Assistant:</strong>
+                            {{ msg.assistant_response }}
+                        </p>
+
+                        <button class="delete-button"
+                                onclick="deleteMessage({{ msg.id }})">
+                            Delete
+                        </button>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="input-area">
+
+                <input
+                    type="text"
+                    id="userInput"
+                    placeholder="Type your message..."
+                    autocomplete="off"
+                >
+
+                <button id="sendButton" onclick="sendMessage()">
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>
