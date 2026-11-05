@@ -2,9 +2,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <a href="/logout" style="color:white;">
-    Logout
-</a>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -16,74 +13,142 @@
 
 <body>
 
-    <header>
-        <h1>AI Smart Assistant</h1>
-        <p>Your intelligent digital assistant</p>
+<div class="app-container">
 
-        <button id="themeButton" onclick="toggleTheme()">
-            🌙 Dark Mode
-        </button>
-    </header>
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
 
-    <main class="container">
+        <h2>AI Assistant</h2>
 
-        <h2>Welcome!</h2>
+        <form action="{{ url_for('new_chat') }}" method="POST">
+            <button class="new-chat-button" type="submit">
+                + New Chat
+            </button>
+        </form>
 
-        <p>Ask questions, explore ideas and learn with AI.</p>
+        <h3>Chat History</h3>
 
-        <div class="chat-box">
+        <div class="chat-history">
 
-            <div id="messages">
+            {% for conversation in conversations %}
 
-                <p class="bot-message">
-                    Hello! Welcome to AI Smart Assistant.
-                </p>
+            <div class="history-item
+                {% if conversation.id == active_conversation.id %}active{% endif %}">
 
-                {% for msg in messages %}
+                <a href="{{ url_for('home', conversation_id=conversation.id) }}">
+                    {{ conversation.title }}
+                </a>
 
-                    <div class="conversation">
+                <form
+                    action="{{ url_for('delete_conversation', conversation_id=conversation.id) }}"
+                    method="POST"
+                    onsubmit="return confirm('Delete this conversation?');">
 
-                        <p class="user-message">
-                            <strong>You:</strong>
-                            {{ msg.user_message }}
-                        </p>
+                    <button class="delete-button" type="submit"
+                            title="Delete conversation">
+                        🗑
+                    </button>
 
-                        <p class="bot-message">
-                            <strong>Assistant:</strong>
-                            {{ msg.assistant_response }}
-                        </p>
-
-                        <button class="delete-button"
-                                onclick="deleteMessage({{ msg.id }})">
-                            Delete
-                        </button>
-
-                    </div>
-
-                {% endfor %}
+                </form>
 
             </div>
 
-            <div class="input-area">
-
-                <input
-                    type="text"
-                    id="userInput"
-                    placeholder="Type your message..."
-                    autocomplete="off"
-                >
-
-                <button id="sendButton" onclick="sendMessage()">
-                    Send
-                </button>
-
-            </div>
+            {% endfor %}
 
         </div>
 
+        <a class="logout-link" href="{{ url_for('logout') }}">
+            ↪ Logout
+        </a>
+
+        <button class="theme-toggle" id="themeButton" type="button">
+            🌙 Dark / Light
+        </button>
+
+    </aside>
+
+
+    <!-- MAIN CHAT AREA -->
+    <main class="main-content">
+
+        <header class="chat-header">
+
+            <h1>AI Smart Assistant</h1>
+
+            <p>
+                Hello, {{ session.get('username', 'User') }}!
+            </p>
+
+        </header>
+
+
+        <!-- CHAT MESSAGES -->
+        <section class="chat-container" id="chatContainer">
+
+            <div id="messages">
+
+                {% for message in messages %}
+
+                <div class="conversation">
+
+                    <div class="user-message">
+                        {{ message.user_message }}
+                    </div>
+
+                    <div class="bot-message">
+                        {{ message.assistant_response }}
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+                {% if not messages %}
+
+                <div class="bot-message welcome-message">
+                    Hello! I'm your AI assistant.
+                    What would you like help with today?
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+        <!-- MESSAGE INPUT -->
+        <form class="input-area" id="chatForm">
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Message your AI assistant..."
+                autocomplete="off"
+                maxlength="4000"
+                required
+            >
+
+            <button type="submit" id="sendButton">
+                Send
+            </button>
+
+        </form>
+
+        <p class="disclaimer">
+            AI can make mistakes. Check important information.
+        </p>
+
     </main>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</div>
+
+<script>
+    const CONVERSATION_ID = {{ active_conversation.id | tojson }};
+</script>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>
 </html>
+<script src="{{ url_for('static', filename='script.js') }}"></script>

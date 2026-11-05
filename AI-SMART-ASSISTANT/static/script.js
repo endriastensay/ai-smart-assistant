@@ -1,25 +1,65 @@
+// ========================================
+// 1. GET HTML ELEMENTS
+// ========================================
 
-/* =========================
-   1. SEND MESSAGE TO FLASK
-========================= */
+const chatForm = document.getElementById("chatForm");
+const messageInput = document.getElementById("messageInput");
+const sendButton = document.getElementById("sendButton");
+const messages = document.getElementById("messages");
+const chatContainer = document.getElementById("chatContainer");
+const themeButton = document.getElementById("themeButton");
 
-async function sendMessage() {
 
-    const input = document.getElementById("userInput");
-    const messages = document.getElementById("messages");
-    const button = document.getElementById("sendButton");
+// ========================================
+// 2. ADD MESSAGE TO SCREEN
+// ========================================
 
-    const message = input.value.trim();
+function addMessage(text, className) {
 
-    if (message === "") {
+    const message = document.createElement("div");
+
+    message.className = className;
+
+    // textContent prevents HTML injection.
+    message.textContent = text;
+
+    messages.appendChild(message);
+
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    return message;
+}
+
+
+// ========================================
+// 3. SEND MESSAGE TO GEMINI
+// ========================================
+
+chatForm.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const userMessage = messageInput.value.trim();
+
+    if (!userMessage) {
         return;
     }
 
-    button.disabled = true;
+    // Display user message.
+    addMessage(userMessage, "user-message");
+
+    messageInput.value = "";
+
+    sendButton.disabled = true;
+    sendButton.textContent = "Thinking...";
+
+    const loadingMessage = addMessage(
+        "Gemini is preparing your answer...",
+        "bot-message"
+    );
 
     try {
 
-        // Send message to Python Flask
         const response = await fetch("/chat", {
 
             method: "POST",
@@ -29,151 +69,112 @@ async function sendMessage() {
             },
 
             body: JSON.stringify({
-                message: message
+
+                message: userMessage,
+
+                conversation_id: Number(CONVERSATION_ID)
+
             })
 
         });
 
         const data = await response.json();
 
+        loadingMessage.remove();
+
         if (!response.ok) {
-            throw new Error(data.error || "Request failed");
+
+            addMessage(
+                data.error || "Something went wrong.",
+                "bot-message"
+            );
+
+            return;
         }
 
-        // Create conversation
-        const conversation = document.createElement("div");
-        conversation.className = "conversation";
+        // Display Gemini response.
+        addMessage(data.reply, "bot-message");
 
-        // User message
-        const userMessage = document.createElement("p");
-        userMessage.className = "user-message";
-        userMessage.textContent = "You: " + message;
+    }
 
-        // Assistant response
-        const botMessage = document.createElement("p");
-        botMessage.className = "bot-message";
-        botMessage.textContent = "Assistant: " + data.reply;
+    catch (error) {
 
-        // Delete button
-        const deleteButton = document.createElement("button");
-        deleteButton.className = "delete-button";
-        deleteButton.textContent = "Delete";
+        loadingMessage.remove();
 
-        deleteButton.onclick = function() {
-            deleteMessage(data.id);
-        };
-
-        conversation.append(
-            userMessage,
-            botMessage,
-            deleteButton
+        addMessage(
+            "Unable to connect to the server. Please try again.",
+            "bot-message"
         );
 
-        messages.appendChild(conversation);
-
-        // Scroll to latest message
-        messages.scrollTop = messages.scrollHeight;
-
-        // Clear input
-        input.value = "";
-
-    } catch (error) {
-
-        alert("Error: " + error.message);
-
-    } finally {
-
-        button.disabled = false;
-        input.focus();
-
-    }
-}
-
-
-/* =========================
-   2. DELETE MESSAGE
-========================= */
-
-async function deleteMessage(id) {
-
-    if (!confirm("Delete this conversation?")) {
-        return;
-    }
-
-    try {
-
-        const response = await fetch("/delete/" + id, {
-            method: "POST"
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            location.reload();
-        }
-
-    } catch (error) {
-
-        alert("Could not delete conversation.");
+        console.error(error);
 
     }
 
+    finally {
+
+        sendButton.disabled = false;
+        sendButton.textContent = "Send";
+
+        messageInput.focus();
+
+    }
+
+});
+
+
+// ========================================
+// 4. DARK AND LIGHT MODE (CORRECTED CLASS NAME)
+// ========================================
+
+const savedTheme = localStorage.getItem("assistant-theme");
+
+// Your style.css runs Dark Mode by default, so we look for 'light' preference
+if (savedTheme === "light") {
+    document.body.classList.add("light-theme");
 }
 
+themeButton.addEventListener("click", function() {
 
-/* =========================
-   3. DARK AND LIGHT MODE
-========================= */
+    // Matches the 'body.light-theme' rule in your CSS
+    document.body.classList.toggle("light-theme");
 
-function toggleTheme() {
+    const currentTheme =
+        document.body.classList.contains("light-theme")
+        ? "light"
+        : "dark";
 
-    document.body.classList.toggle("dark-mode");
+    localStorage.setItem("assistant-theme", currentTheme);
 
-    const isDark =
-        document.body.classList.contains("dark-mode");
-
-    localStorage.setItem(
-        "theme",
-        isDark ? "dark" : "light"
-    );
-
-    updateThemeButton();
-
-}
+});
 
 
-function updateThemeButton() {
+// ========================================
+// 5. AUTOMATIC SCROLL
+// ========================================
 
-    const button = document.getElementById("themeButton");
+window.addEventListener("load", function() {
 
-    const isDark =
-        document.body.classList.contains("dark-mode");
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 
-    button.textContent =
-        isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+});
+// ========================================
+// 4. DARK AND LIGHT MODE
+// ========================================
 
-}
+// Run theme detection as soon as the file loads
+(function() {
+    const savedTheme = localStorage.getItem("assistant-theme");
+    if (savedTheme === "light") {
+        document.body.classList.add("light-theme");
+    }
+})();
 
+// Attach click event listener to the toggle button
+themeButton.addEventListener("click", function() {
+    // Toggle the class name directly on the body element
+    document.body.classList.toggle("light-theme");
 
-// Restore theme
-if (localStorage.getItem("theme") === "dark") {
-
-    document.body.classList.add("dark-mode");
-
-}
-
-updateThemeButton();
-
-
-/* =========================
-   4. ENTER KEY
-========================= */
-
-document.getElementById("userInput")
-    .addEventListener("keydown", function(event) {
-
-        if (event.key === "Enter") {
-            sendMessage();
-        }
-
-    });
+    // Save the active preference to localStorage so it stays active
+    const currentTheme = document.body.classList.contains("light-theme") ? "light" : "dark";
+    localStorage.setItem("assistant-theme", currentTheme);
+});
